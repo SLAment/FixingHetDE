@@ -1,10 +1,9 @@
-### wd40explorer: Exploring the diversity of WD40 repeats in the Podospora anserina species complex
+### HETwd40explorer: Finding and classifying WD40 repeats with high internal conservation in het genes
 #############################################################################
 #############################################################################
 # ==================================================
 # S. Lorena Ament-Velasquez
 # 2023-03-09 - 2025-01-07
-# ---------------
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # from Bio import SeqIO

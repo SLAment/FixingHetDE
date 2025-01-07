@@ -18,7 +18,7 @@ In the repository you'll find:
 - `HETwd40explorer.smk` -- The snakemake pipeline
 - `HETwd40explorer_README.md` -- this instructions
 - `config/config.yaml` -- a configuration file to indicate the input fasta file, the amino acids used for classification of repeats, and the location of the scripts
-- `data/2024.09.10_hnwd_master_het_reAl_Illu_noGuides_noemptycols.fa` -- The input alignment
+- `data/2024.09.10_hnwd_master_het_reAl_Illu_noGuides_noemptycols.fa` -- The input alignment. Notice the sequences contain an intron, but the way I align them, they mantain the frame for the WD40 domain.
 - `envs/plot.yaml` -- a small conda environment only used for plotting
 - `scripts/PlottingHETAlleles.R` -- R scrip to plot, although I modified the figures in Inkscape for the publication
 - `scripts/WDdescriptor.py` -- a python script that uses REGEX to find WD40 repeats with high internal conservation in NWD genes. It classifies them based on the amino acids positions set in the config file.

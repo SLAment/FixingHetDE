@@ -51,10 +51,6 @@ try:
 except IOError as msg:  # Check that the file exists
 	parser.error(str(msg)) 
 	parser.print_help()
-# except:
-# 	print("Usage: python " + sys.argv[0] + " hnwd_master_onlyWDdomain_noemptycols_noGuides_hetsfirst.fa")
-# 	print("Version", versiondisplay)
-# 	sys.exit(1)
 
 # ------------------------------------------------------
 
