@@ -66,6 +66,9 @@ Something went wrong and you want to interrupt the run? Kill it!
 
 The pipeline produces reports describing the WD40 repeats and an R-friendly version of the report that is read by the Rscript `scripts/PlottingHETAlleles.R`. The plots in `results` were later modified in Inkscape manually for the paper's figures.
 
+- `alignments/WDrepeats_10-11-12-14-30-32-39.fa` -- alignment that contains *all* full repeats, from all assemblies and all alleles (repeats with frame-shifts or N tracks are not included). Repeats that contain stop codons are not classified, and instead have fasta headers starting with `!`. If the header says "allkmers" or "default" then the sequence came from an Illumina assembly.
+
+
 ----
 
 Disclaimer: These scripts and files are provided "as is" and without any express or implied warranties, including, without limitation, the implied warranties of merchantability and fitness for a particular purpose.
