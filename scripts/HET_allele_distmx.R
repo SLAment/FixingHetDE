@@ -84,6 +84,10 @@ lab_nmds <- function(
     return(sum((palette_dist - target_dist)^2) + contrast / palette_contrast)
   }
 
+  current_score <- score(palette)
+  best_score <- current_score
+  best_palette <- palette
+
   step_schedule <- stepsize[1] * (stepsize[2] / stepsize[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
   beta_schedule <- beta[1] * (beta[2] / beta[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
 
@@ -105,18 +109,25 @@ lab_nmds <- function(
       proposal@coords[which_fix,3] <- pmax(pmin(proposal@coords[which_fix,3], b_range[2]), b_range[1])
       proposal_hexcodes <- colorspace::hex(proposal)
     }
-    if (score(proposal) < score(palette)) {
+    proposal_score <- score(proposal)
+    if (proposal_score < current_score) {
       palette <- proposal
+      current_score <- proposal_score
       if (verbose) cat("Iteration", i, "Score", score(palette), "\n")
     } else {
-      if (runif(1) < exp((score(palette) - score(proposal)) * beta_schedule[i])) {
+      if (runif(1) < exp((current_score - proposal_score) * beta_schedule[i])) {
         palette <- proposal
+        current_score <- proposal_score
       }
+    }
+    if (current_score < best_score) {
+      best_palette <- palette
+      best_score <- current_score
     }
   }
 
   # add the identical sequences back in
-  hexcodes <- colorspace::hex(palette)[decode[,1]]
+  hexcodes <- colorspace::hex(best_palette)[decode[,1]]
   names(hexcodes) <- rownames(dist_matrix)
 
   return(hexcodes)
