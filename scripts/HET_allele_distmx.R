@@ -129,8 +129,23 @@ lab_nmds <- function(
   # add the identical sequences back in
   hexcodes <- colorspace::hex(best_palette)[decode[,1]]
   names(hexcodes) <- rownames(dist_matrix)
+  attr(hexcodes, "score") <- best_score
 
   return(hexcodes)
+}
+
+# run lab_nmds several times, choosing the result with the best score
+meta_lab_nmds <- function(dist_matrix, seeds = sample(1:1e6, 10), ...) {
+  best_palette <- NULL
+  best_score <- Inf
+  for (seed in seeds) {
+    palette <- lab_nmds(dist_matrix, seed = seed, ...)
+    if (attr(palette, "score") < best_score) {
+      best_palette <- palette
+      best_score <- attr(palette, "score")
+    }
+  }
+  return(best_palette)
 }
 
 # Amino acid functional distance matrix from Urbina Tang and Higgs
@@ -195,11 +210,11 @@ rand.seed <- 2
 # hete_metadata$fill <- colorspace::hex(colorspace::LAB(hete_nmds$points))
 
 # using hand-coded LAB NMDS
-# this version is a bit slower, but it enforces that the colors fit nicely in LAB
+# this version is slower, but it enforces that the colors fit nicely in LAB
 # during every iteration, so it can more completely utilize the color space.
-hete_metadata$fill <- lab_nmds(
+set.seed(rand.seed)
+hete_metadata$fill <- meta_lab_nmds(
   dist_matrix = hete_distmatrix,
-  seed = rand.seed,
   n_iter = 1e4,
   contrast = 100,
   l_range = c(40, 80)
