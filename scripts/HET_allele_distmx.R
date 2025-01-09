@@ -58,7 +58,11 @@ lab_nmds <- function(
 
   # remove the duplicates
   matches <-dupes[dupes[,1] != dupes[,2],]
-  dedup_matrix <- dist_matrix[-matches[,2], -matches[,2]]
+  dedup_matrix <- if (nrow(matches) > 0) {
+    dist_matrix[-matches[,2], -matches[,2]]
+  } else {
+    dist_matrix
+  }
 
   # renumber col 1 to match entries in dedup_matrix instead of dist_matri
   dupes[,1] <- dupes[,1] - shift[dupes[,1]]
