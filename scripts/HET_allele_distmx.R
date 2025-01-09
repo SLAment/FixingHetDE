@@ -207,17 +207,17 @@ stops <- which(Biostrings::letterFrequency(repeat_aa, "*") > 0)
 nostop_aa <- repeat_aa[-stops]
 nostop_metadata <- repeat_metadata[names(nostop_aa),]
 
-system.time(nostop_distmatrix <- aa_distmatrix(nostop_aa, uth))
+nostop_distmatrix <- aa_distmatrix(nostop_aa, uth)
 set.seed(1)
 nostop_palette <- meta_lab_nmds(
   dist_matrix = nostop_distmatrix,
   n_iter = 1e4,
   contrast = 100,
-  l_range = c(40, 80)
+  l_range = c(20, 100)
 )
 nostop_metadata$fill <- nostop_palette
 
-#### show het-d ####
+##### show het-d #####
 
 hetd_strains <- c(
   ## reactive
@@ -242,7 +242,7 @@ nostop_metadata |>
         legend.position = "none",
         panel.grid = element_blank())
 
-#### show het-e ####
+##### show het-e #####
 
 hete_strains <- c(
   # reactive
@@ -268,7 +268,7 @@ nostop_metadata |>
         legend.position = "none",
         panel.grid = element_blank())
 
-#### show het-r ####
+##### show het-r #####
 
 nostop_metadata |>
   dplyr::filter(Gene == "het-r") |>
@@ -282,3 +282,162 @@ nostop_metadata |>
   theme(axis.title = element_blank(),
         legend.position = "none",
         panel.grid = element_blank())
+
+#### using only "variable" positions ####
+
+variable_pos <- c(10, 11, 12, 14, 30, 32, 39)
+
+variable_aa <- Biostrings::AAMultipleAlignment(nostop_aa)
+
+colmask(variable_aa, invert = TRUE) <-
+  IRanges::IRanges(start = variable_pos, width = 1L) |>
+    IRanges::reduce()
+
+variable_aa <- methods::as(variable_aa, "AAStringSet") |>
+  unique()
+
+names(variable_aa) <- sub("_.+", "", names(variable_aa))
+
+variable_distmatrix <- aa_distmatrix(variable_aa, uth)
+
+
+#### het-d ####
+
+hetd_variants <- which(startsWith(names(variable_aa), "d"))
+hetd_variable_aa <- variable_aa[hetd_variants]
+hetd_variable_distmatrix <- variable_distmatrix[hetd_variants, hetd_variants]
+
+set.seed(2)
+hetd_palette <- meta_lab_nmds(
+  dist_matrix = hetd_variable_distmatrix,
+  n_iter = 1e4,
+  contrast = 100,
+  l_range = c(40, 80),
+  a_range = c(20, 100),
+  b_range = c(-50, 50)
+)
+
+nostop_metadata |>
+  dplyr::filter(Strain %in% hetd_strains, Gene == "het-d") |>
+  dplyr::mutate(Strain = ordered(Strain, levels = rev(hetd_strains))) |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = RepeatType)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(color = "black")  +
+  scale_fill_manual(values = hetd_palette) +
+  coord_fixed() +
+  theme_minimal() +
+  scale_x_continuous(limits = c(0.5, 12.5), breaks = 1:12) +
+  theme(axis.title = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank())
+
+#### het-e ####
+
+hete_variants <- which(startsWith(names(variable_aa), "e"))
+hete_variable_aa <- variable_aa[hete_variants]
+hete_variable_distmatrix <- variable_distmatrix[hete_variants, hete_variants]
+
+set.seed(3)
+hete_palette <- meta_lab_nmds(
+  dist_matrix = hete_variable_distmatrix,
+  n_iter = 1e4,
+  contrast = 100,
+  l_range = c(40, 90)
+)
+
+nostop_metadata |>
+  dplyr::filter(Strain %in% hete_strains, Gene == "het-e") |>
+  dplyr::mutate(
+    Position = ifelse(Strain == "PaA", Position + 1, Position),
+    Strain = ordered(Strain, levels = rev(hete_strains))
+  ) |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = RepeatType)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(color = "black")  +
+  scale_fill_manual(values = hete_palette) +
+  coord_fixed() +
+  theme_minimal() +
+  scale_x_continuous(limits = c(0.5, 12.5), breaks = 1:12) +
+  theme(axis.title = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank())
+
+#### het-r ####
+
+hetr_variants <- which(startsWith(names(variable_aa), "r"))
+hetr_variable_aa <- variable_aa[hetr_variants]
+hetr_variable_distmatrix <- variable_distmatrix[hetr_variants, hetr_variants]
+
+set.seed(1)
+hetr_palette <- meta_lab_nmds(
+  dist_matrix = hetr_variable_distmatrix,
+  n_iter = 1e4,
+  contrast = 100,
+  l_range = c(60, 90),
+  a_range = c(-50, 50),
+  b_range = c(0, 100)
+)
+
+nostop_metadata |>
+  dplyr::filter(Gene == "het-r") |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = RepeatType)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(color = "black")  +
+  scale_fill_manual(values = hetr_palette) +
+  coord_fixed() +
+  theme_minimal() +
+  scale_x_continuous(limits = c(0.5, 12.5), breaks = 1:12) +
+  theme(axis.title = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank())
+
+#### translate palettes ####
+
+sed_palette_swap <- function(old_palette, new_palette, file) {
+  old_palette <- tibble::enframe(old_palette, value = "old") |>
+    dplyr::mutate(
+      name = readr::parse_number(name),
+      old = tolower(old)
+    )
+  new_palette <- tibble::enframe(new_palette, value = "new") |>
+    dplyr::mutate(
+      name = readr::parse_number(name),
+      new = tolower(new)
+    )
+
+  dplyr::inner_join(old_palette, new_palette, by = "name") |>
+    glue::glue_data("s/fill:{old}/fill:{new}/") |>
+    writeLines(file)
+}
+
+hetR_mod_palette = c(
+  "1" = "#66c2a5",
+  "2" = "#cf9c76",
+  "3" = "#cf948c",
+  "4" = "#969dca",
+  "5" = "#d58ec4",
+  "6" = "#c6b18b",
+  "7" = "#b7d84c",
+  "8" = "#f6d832",
+  "9" = "#efcc6b",
+  "10" = "#d5be9d",
+  "11" = "#b3b3b3",
+  "16" = "#cccccc"
+)
+
+sed_swap_file <- file("figures/colorswap.sed", "w")
+
+# Named palettes defined in PlottingHETAlleles.R
+
+sed_palette_swap(hetD_named_palette, hetd_palette, sed_swap_file)
+sed_palette_swap(hetE_named_palette, hete_palette, sed_swap_file)
+sed_palette_swap(hetR_named_palette, hetr_palette, sed_swap_file)
+sed_palette_swap(hetR_mod_palette, hetr_palette, sed_swap_file)
+
+close(sed_swap_file)
+
+# To modify existing SVG files:
+# sed -f figures/colorswap.sed {old_file.svg} > {new_file.svg}
+
+# To remove opacity:
+# sed -ri 's/fill-opacity:[0-9.]+;/fill-opacity:1;/g' {new_file.svg}
