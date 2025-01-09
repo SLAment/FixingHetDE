@@ -196,7 +196,49 @@ repeat_metadata <- read.delim(
   sep = "\t"
 )
 
-# Choose only het-e
+#### Palette for all HIC repeats ####
+# except those with stop codon
+
+stops <- which(Biostrings::letterFrequency(repeat_aa, "*") > 0)
+nostop_aa <- repeat_aa[-stops]
+nostop_metadata <- repeat_metadata[names(nostop_aa),]
+
+system.time(nostop_distmatrix <- aa_distmatrix(nostop_aa, uth))
+set.seed(1)
+nostop_palette <- meta_lab_nmds(
+  dist_matrix = nostop_distmatrix,
+  n_iter = 1e4,
+  contrast = 100,
+  l_range = c(40, 80)
+)
+nostop_metadata$fill <- nostop_palette
+
+#### show het-d ####
+
+hetd_strains <- c(
+  ## reactive
+  "ChEhDap", "CsDfp", "PaYp",
+  ## non.reactive
+  "PaZp", "CoEfp", "CmEmm", "Podan2",
+  ## unknown
+  "PaWa53m", "PaWa137m", "PaTgp", "PaWa87p", "PaWa100p", "PaWa58m", "PaWa21m", "PaWa46p", "PaWa28m", "PaWa63p"
+)
+
+nostop_metadata |>
+  dplyr::filter(Strain %in% hetd_strains, Gene == "het-d") |>
+  dplyr::mutate(Strain = ordered(Strain, levels = rev(hetd_strains))) |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = fill)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(color = "black")  +
+  scale_fill_identity() +
+  coord_fixed() +
+  theme_minimal() +
+  scale_x_continuous(limits = c(0.5, 12.5), breaks = 1:12) +
+  theme(axis.title = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank())
+
+#### show het-e ####
 
 hete_strains <- c(
   # reactive
@@ -206,60 +248,29 @@ hete_strains <- c(
   #unknown
   "PaWa46p", "PaWa58m", "PaWa28m", "PaWa87+", "PaTgp", "PaWa63p", "PaWa137m",
   "PaWa100p", "PaWa21m", "PaWa53m"
-  )
-
-hete_metadata <- repeat_metadata[repeat_metadata$Strain %in% hete_strains & repeat_metadata$Gene == "het-e",]
-
-# don't include the illumina ones
-hete_metadata <- hete_metadata[!grepl("default|allkmer|L28125", row.names(hete_metadata)),]
-
-hete_aa <- repeat_aa[row.names(hete_metadata),]
-
-# calculate distance matrix
-hete_distmatrix <- aa_distmatrix(hete_aa, uth)
-
-# plot the distance matrix
-# hete_distmatrix |>
-#   tibble::as_tibble(rownames = "rep1") |>
-#   tidyr::pivot_longer(-rep1, names_to = "rep2", values_to = "dist") |>
-#   ggplot(aes(x = rep1, y = rep2, fill = dist)) +
-#   geom_tile()
-
-# embed the distance matrix in 3-dimensional space
-rand.seed <- 2
-
-# using standard NMDS
-# here the problem is that there is no guarantee that all the points will be
-# possible to convert to RGB, so everything needs to be "squished" into a
-# rectangular region that works.  This limits the possible contrast
-
-# hete_nmds <- vegan::metaMDS(hete_distmatrix, distance = "euclidean", k = 3)
-# # scale to fit into CIE-LAB color space
-# hete_nmds$points[,1] <- (hete_nmds$points[,1] - min(hete_nmds$points[,1])) / (max(hete_nmds$points[,1]) - min(hete_nmds$points[,1])) * 35 + 30
-# hete_nmds$points[,2] <- (hete_nmds$points[,2] - min(hete_nmds$points[,2])) / (max(hete_nmds$points[,2]) - min(hete_nmds$points[,2])) * 70 - 20
-# hete_nmds$points[,3] <- (hete_nmds$points[,3] - min(hete_nmds$points[,3])) / (max(hete_nmds$points[,3]) - min(hete_nmds$points[,3])) * 70 - 20
-# hete_metadata$fill <- colorspace::hex(colorspace::LAB(hete_nmds$points))
-
-# using hand-coded LAB NMDS
-# this version is slower, but it enforces that the colors fit nicely in LAB
-# during every iteration, so it can more completely utilize the color space.
-set.seed(rand.seed)
-hete_metadata$fill <- meta_lab_nmds(
-  dist_matrix = hete_distmatrix,
-  n_iter = 1e4,
-  contrast = 100,
-  l_range = c(40, 80)
 )
 
-# plot
-hete_metadata |>
-  dplyr::mutate(
-    Position = Position + ifelse(Strain == "PaA", 1, 0),
-    Strain = ordered(Strain, levels = rev(hete_strains))
-    ) |>
-  ggplot(aes(x = Position, y = Strain, label = RepeatType, fill = fill)) +
+nostop_metadata |>
+  dplyr::filter(Strain %in% hete_strains, Gene == "het-e") |>
+  dplyr::mutate(Strain = ordered(Strain, levels = rev(hete_strains))) |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = fill)) +
   geom_tile(color = "white", linewidth = 2) +
-  geom_text() +
+  geom_text(color = "black")  +
+  scale_fill_identity() +
+  coord_fixed() +
+  theme_minimal() +
+  scale_x_continuous(limits = c(0.5, 12.5), breaks = 1:12) +
+  theme(axis.title = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank())
+
+#### show het-r ####
+
+nostop_metadata |>
+  dplyr::filter(Gene == "het-r") |>
+  ggplot(aes(x = Position, y = Strain, label = substr(RepeatType, 2, 10), fill = fill)) +
+  geom_tile(color = "white", linewidth = 2) +
+  geom_text(color = "black")  +
   scale_fill_identity() +
   coord_fixed() +
   theme_minimal() +
