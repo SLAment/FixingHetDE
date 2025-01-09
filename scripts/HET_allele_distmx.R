@@ -4,11 +4,9 @@ library(ggplot2)
 # add up the pairwise scores (or distances) between two amino acid sequences
 # matrix should have row names and column names corresponding to the amino acids
 aa_score <- function(aa1, aa2, matrix){
-  score <- 0
-  for (i in 1:nchar(aa1)){
-    score <- score + matrix[letter(aa1, i), letter(aa2, i)]
-  }
-  return(score)
+  sum(
+    matrix[cbind(as.matrix(aa1), as.matrix(aa2))]
+  )
 }
 
 # generate a distance/score matrix for a set of amino acid sequences
@@ -16,8 +14,10 @@ aa_distmatrix <- function(aa_seq, matrix){
   n <- length(aa_seq)
   distmatrix <- matrix(0, n, n, dimnames = list(names(aa_seq), names(aa_seq)))
   for (i in 1:n){
-    for (j in 1:n){
-      distmatrix[i, j] <- aa_score(aa_seq[[i]], aa_seq[[j]], matrix)
+    for (j in i:n){
+      s <- aa_score(aa_seq[[i]], aa_seq[[j]], matrix)
+      distmatrix[i, j] <- s
+      distmatrix[j, i] <- s
     }
   }
   return(distmatrix)
