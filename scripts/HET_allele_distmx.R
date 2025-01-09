@@ -1,6 +1,8 @@
 library(Biostrings)
 library(ggplot2)
 
+#### functions ####
+
 # add up the pairwise scores (or distances) between two amino acid sequences
 # matrix should have row names and column names corresponding to the amino acids
 aa_score <- function(aa1, aa2, matrix){
@@ -40,21 +42,36 @@ lab_nmds <- function(
     verbose = TRUE
 ) {
   # find identical sequences
-  decode <- which(dist_matrix == 0, arr.ind = TRUE)
-  decode <- decode[decode[,1] <= decode[,2],]
-  decode <- decode[!duplicated(decode[,2]),]
+  dupes <- which(dist_matrix == 0, arr.ind = TRUE)
+  # for each pair, only keep the one where the smaller index is in col 1
+  dupes <- dupes[dupes[,1] <= dupes[,2],]
+  # for each sequence, only keep the first time it appears in col 2
+  # this retains exactly one row for each input, which is in col 2
+  # then the lowest-numbered identical sequence is in col 1
+  # (if the sequence is its own least-numbered identical sequence then
+  # col 1 == col 2)
+  dupes <- dupes[!duplicated(dupes[,2]),]
 
-  # distance matrix not including any duplicates
-  shift <- cumsum(decode[,1] != decode[,2])
-  matches <-decode[decode[,1] != decode[,2],]
+  # figure out how much the rows will move after we remove the duplicates
+  # (i.e. those where col 1 != col 2)
+  shift <- cumsum(dupes[,1] != dupes[,2])
+
+  # remove the duplicates
+  matches <-dupes[dupes[,1] != dupes[,2],]
   dedup_matrix <- dist_matrix[-matches[,2], -matches[,2]]
-  decode[,1] <- decode[,1] - shift[decode[,1]]
+
+  # renumber col 1 to match entries in dedup_matrix instead of dist_matri
+  dupes[,1] <- dupes[,1] - shift[dupes[,1]]
 
   n <- nrow(dedup_matrix)
+
+  # the target is for the distance matrix in LAB space to match the
+  # given matrix, up to scaling.
+  # The dist object contains only the lower triangle
   target_dist <- as.dist(dedup_matrix)
   target_dist <- target_dist / mean(target_dist)
 
-  #initialize the LAB palette
+  # initialize the LAB palette
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -63,7 +80,7 @@ lab_nmds <- function(
     A = runif(n, a_range[1], a_range[2]),
     B = runif(n, b_range[1], b_range[2])
   )
-  # force the coordinates to be representable in the RGB gamut
+  # re-sample the coordinates to be representable in the RGB gamut
   hexcodes <- colorspace::hex(palette)
   while (any(is.na(hexcodes))) {
     n_fix <- sum(is.na(hexcodes))
@@ -77,6 +94,8 @@ lab_nmds <- function(
     hexcodes <- colorspace::hex(palette)
   }
 
+  # loss function from Gecos
+  # Similar but not identical to the standard NMDS loss function
   score <- function(palette) {
     palette_dist <- dist(palette@coords)
     palette_contrast <- mean(palette_dist)
@@ -88,6 +107,7 @@ lab_nmds <- function(
   best_score <- current_score
   best_palette <- palette
 
+  # exponential step and temperature schedules
   step_schedule <- stepsize[1] * (stepsize[2] / stepsize[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
   beta_schedule <- beta[1] * (beta[2] / beta[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
 
@@ -95,9 +115,13 @@ lab_nmds <- function(
   for (i in seq_len(n_iter)) {
     proposal <- palette
     proposal@coords <- proposal@coords + rnorm(n * 3, 0, step_schedule[i])
+
+    # force all proposals into the requested ranges
     proposal@coords[,1] <- pmax(pmin(proposal@coords[,1], l_range[2]), l_range[1])
     proposal@coords[,2] <- pmax(pmin(proposal@coords[,2], a_range[2]), a_range[1])
     proposal@coords[,3] <- pmax(pmin(proposal@coords[,3], b_range[2]), b_range[1])
+
+    # re-sample points which are outside the RGB gamut
     proposal_hexcodes <- colorspace::hex(proposal)
     while (any(is.na(proposal_hexcodes))) {
       n_fix <- sum(is.na(proposal_hexcodes))
@@ -111,15 +135,21 @@ lab_nmds <- function(
     }
     proposal_score <- score(proposal)
     if (proposal_score < current_score) {
+      # accept if the score improves
       palette <- proposal
       current_score <- proposal_score
       if (verbose) cat("Iteration", i, "Score", score(palette), "\n")
     } else {
+      # if the score doesn't improve, accept with probability dependent on the
+      # amount of increase and the current temperature
       if (runif(1) < exp((current_score - proposal_score) * beta_schedule[i])) {
         palette <- proposal
         current_score <- proposal_score
       }
     }
+
+    # keep track of the best scoring palette, it's possible that it isn't the
+    # last one sampled
     if (current_score < best_score) {
       best_palette <- palette
       best_score <- current_score
@@ -127,14 +157,15 @@ lab_nmds <- function(
   }
 
   # add the identical sequences back in
-  hexcodes <- colorspace::hex(best_palette)[decode[,1]]
+  hexcodes <- colorspace::hex(best_palette)[dupes[,1]]
   names(hexcodes) <- rownames(dist_matrix)
   attr(hexcodes, "score") <- best_score
 
   return(hexcodes)
 }
 
-# run lab_nmds several times, choosing the result with the best score
+# run lab_nmds several times with different seeds, choosing the result with the
+# best score
 meta_lab_nmds <- function(dist_matrix, seeds = sample(1:1e6, 10), ...) {
   best_palette <- NULL
   best_score <- Inf
