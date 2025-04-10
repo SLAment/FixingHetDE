@@ -164,6 +164,7 @@ lab_nmds <- function(
   hexcodes <- colorspace::hex(best_palette)[dupes[,1]]
   names(hexcodes) <- rownames(dist_matrix)
   attr(hexcodes, "score") <- best_score
+  attr(hexcodes, "lab") <- best_palette
 
   return(hexcodes)
 }
@@ -361,6 +362,95 @@ nostop_metadata |>
   theme(axis.title = element_blank(),
         legend.position = "none",
         panel.grid = element_blank())
+
+##### color-space plot #####
+# manual 3D plot
+
+# functions to project a 3-dimensional point to projected x- and y-coordinates
+# in a 2D plot using basis vectors
+rotate_x <- function(x, y, z) {
+  x * ix + y *iy + z * iz
+}
+
+rotate_y <- function(x, y, z) {
+  x * jx + y *jy + z * jz
+}
+
+ix = 1
+iy = -1/sqrt(2)
+iz = 0
+
+jx = 0
+jy = -1/sqrt(2)
+jz = 1
+
+# Plot the points
+tibble::enframe(hete_palette) |>
+  dplyr::bind_cols(attr(hete_palette, "lab")@coords) |>
+  dplyr::arrange(B) |>
+  ggplot(aes(
+    x = rotate_x(A, B, L-40), ## offset L by 40 to keep it compact
+    y = rotate_y(A, B, L-40),
+    color = name,
+    fill = name,
+    label = substr(name, 2, 5)
+  )) +
+  annotate(
+    "segment",
+    x = rep(rotate_x(-40, -25, 0), 3),
+    y = rep(rotate_y(-40, -25, 0), 3),
+    xend = c(
+      rotate_x(40, -25, 0),
+      rotate_x(-40, 45, 0),
+      rotate_x(-40, -25, 60)
+      ),
+    yend = c(
+      rotate_y(40, -25, 0),
+      rotate_y(-40, 45, 0),
+      rotate_y(-40, -25, 40)
+      ),
+    arrow = arrow(length = unit(0.2, "cm")),
+    linewidth = 0.1
+    ) +
+  annotate(
+    "text",
+    x = c(
+      rotate_x(40, -25, 3),
+      rotate_x(-40, 45, 3),
+      rotate_x(-40, -25, 42)
+    ),
+    y = c(
+      rotate_y(40, -25, 3),
+      rotate_y(-40, 45, 3),
+      rotate_y(-40, -25, 42)
+    ),
+    label = c("A", "B", "L"),
+    size = 3,
+    color = "black"
+  ) +
+  geom_segment(
+    aes(xend = rotate_x(A, B, 0), yend = rotate_y(A, B, 0)),
+    linetype = "dashed"
+  ) +
+  geom_point(
+    size = 12,
+    data = ~dplyr::filter(., name %in% c("e1", "e17", "e24")),
+    color = "black",
+    shape = 22,
+    stroke = 2
+  ) +
+  geom_point(
+    size = 7,
+    shape = 15,
+    data = ~dplyr::filter(., !name %in% c("e1", "e17", "e24"))
+  ) +
+  geom_text(
+    aes(size = ifelse(name %in% c("e1", "e17", "e24"), 6, 4)),
+    color = "black") +
+  scale_size_identity(guide = "none") +
+  scale_color_manual(values = hete_palette, guide = NULL, aesthetics = c("color", "fill")) +
+  theme_void() +
+  coord_fixed()
 
 #### het-r ####
 
