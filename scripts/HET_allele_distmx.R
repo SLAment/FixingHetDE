@@ -1,8 +1,31 @@
+#!/usr/bin/env Rscript
+
+### HET_allele_distmx: assigning colors to the WD40 HIC repeats based on physicochemical characteristics
+#############################################################################
+# ===========================================================================
+# Brendan Furneaux
+# with minor additions by Sandra Lorena Ament Velasquez
+# 2025/01/09-10
+# ++++++++++++++++++++++++++++++++++++++++++++++
+
+# ============================
+# Load the necessary libraries
+# ============================
 library(Biostrings)
 library(ggplot2)
+library(reshape2)
 
+# ============================
+# Outputs
+# ============================
+# Dissimilarity heatmaps
+hetd_disheatmap <- "results/het-d_disheatmap.png"
+hete_disheatmap <- "results/het-e_disheatmap.png"
+hetr_disheatmap <- "results/het-r_disheatmap.png"
+
+# ============================
 #### functions ####
-
+# ============================
 # add up the pairwise scores (or distances) between two amino acid sequences
 # matrix should have row names and column names corresponding to the amino acids
 aa_score <- function(aa1, aa2, matrix){
@@ -184,6 +207,28 @@ meta_lab_nmds <- function(dist_matrix, seeds = sample(1:1e6, 10), ...) {
   return(best_palette)
 }
 
+# --- Lore: heatmap of all repeats ---
+repeatheatmap <- function(distmatrix){
+  # Convert matrix to a data frame in long format
+  dism_long <- reshape2::melt(as.matrix(distmatrix))
+  names(dism_long) <- c("R1", "R2", "Dissimilarity")
+
+  # Plot heatmap
+  p <- ggplot(dism_long, aes(x = R1, y = R2, fill = Dissimilarity)) +
+    geom_tile() +
+    scale_fill_gradient(low = "white", high = "black") + # Define the color gradient
+    labs(x = "Columns", y = "Rows", fill = "Distance") + # Customize labels
+    theme_minimal() +
+    labs(x = "", y = "", fill = "Dissimilarity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.title = element_blank(),   # Remove axis tick labels
+          legend.position = "bottom" ) # Rotate x-axis labels for better readability
+  return(p)
+}
+
+# ============================
+#### -------- Work it! --------
+# ============================
 # Amino acid functional distance matrix from Urbina Tang and Higgs
 # https://doi.org/10.1007/s00239-005-0051-1
 uth <- read.delim("data/UTH_matrix.txt", header=TRUE, row.names=1, sep = " ") |>
@@ -332,6 +377,11 @@ nostop_metadata |>
         legend.position = "none",
         panel.grid = element_blank())
 
+# heatmap of all het-d repeats
+ggsave(plot = repeatheatmap(hetd_variable_distmatrix),
+       filename = hetd_disheatmap,
+       width = 4.2, height = 5)
+
 #### het-e ####
 
 hete_variants <- which(startsWith(names(variable_aa), "e"))
@@ -362,6 +412,11 @@ nostop_metadata |>
   theme(axis.title = element_blank(),
         legend.position = "none",
         panel.grid = element_blank())
+
+# heatmap of all het-e repeats
+ggsave(plot = repeatheatmap(hete_variable_distmatrix),
+       filename = hete_disheatmap,
+       width = 5, height = 6)
 
 ##### color-space plot #####
 # manual 3D plot
@@ -480,6 +535,12 @@ nostop_metadata |>
   theme(axis.title = element_blank(),
         legend.position = "none",
         panel.grid = element_blank())
+
+# heatmap of all het-r repeats
+ggsave(plot = repeatheatmap(hetr_variable_distmatrix),
+       filename = hetr_disheatmap,
+       width = 4.2, height = 5)
+
 
 #### translate palettes ####
 
