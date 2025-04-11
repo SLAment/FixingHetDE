@@ -26,7 +26,7 @@ hetr_disheatmap <- "results/het-r_disheatmap.png"
 
 # To make an explanatory figure of the method
 LABhete3D <- "results/LABhete3D.pdf"
-utr_heatmap <- "results/UTH.pdf"
+uth_heatmap <- "results/UTH.pdf"
 
 # ============================
 #### functions ####
@@ -632,6 +632,6 @@ close(sed_swap_file)
 # --- Lore: heatmap of the amino acid matrix for illustration ---
 # heatmap of all het-e repeats
 ggsave(plot = repeatheatmap(uth), 
-       filename = utr_heatmap, 
+       filename = uth_heatmap, 
        width = 3.8, height = 4)
 
