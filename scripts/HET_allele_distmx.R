@@ -13,6 +13,7 @@
 # ============================
 library(Biostrings)
 library(ggplot2)
+library(ggforce)
 library(reshape2)
 library(dplyr)
 
@@ -481,43 +482,51 @@ jz = 1
     fill = name,
     label = substr(name, 2, 5)
   )) +
+    # draw the axes
   annotate(
     "segment",
-    x = rep(rotate_x(-40, -25, 0), 3),
-    y = rep(rotate_y(-40, -25, 0), 3),
+    x = rep(rotate_x(-40, -30, 0), 3),
+    y = rep(rotate_y(-40, -30, 0), 3),
     xend = c(
-      rotate_x(40, -25, 0),
+      rotate_x(40, -30, 0),
       rotate_x(-40, 45, 0),
-      rotate_x(-40, -25, 60)
+      rotate_x(-40, -30, 60)
     ),
     yend = c(
-      rotate_y(40, -25, 0),
+      rotate_y(40, -30, 0),
       rotate_y(-40, 45, 0),
-      rotate_y(-40, -25, 40)
+      rotate_y(-40, -30, 40)
     ),
     arrow = arrow(length = unit(0.2, "cm")),
     linewidth = 0.8
   ) +
+    # draw axis labels
   annotate(
     "text",
     x = c(
-      rotate_x(40, -25, 3),
+      rotate_x(40, -30, 3),
       rotate_x(-40, 45, 3),
-      rotate_x(-40, -25, 42)
+      rotate_x(-40, -30, 42)
     ),
     y = c(
-      rotate_y(40, -25, 3),
+      rotate_y(40, -30, 3),
       rotate_y(-40, 45, 3),
-      rotate_y(-40, -25, 42)
+      rotate_y(-40, -30, 42)
     ),
     label = c("A", "B", "L"),
     size = 7,
     color = "black"
   ) +
+    # draw foreshortened "shadow" points in AB-plane
+  geom_ellipse(
+    aes(x0 = rotate_x(A, B, 0), y0 = rotate_y(A, B, 0), a = 1, b = 1/2,
+        angle = 0)) +
+    # draw linking lines
   geom_segment(
     aes(xend = rotate_x(A, B, 0), yend = rotate_y(A, B, 0)),
     linetype = "dashed"
   ) +
+    # draw selected HET repeats
   geom_point(
     size = 10,
     data = ~dplyr::filter(., name %in% c("e1", "e17", "e24")),
@@ -525,16 +534,20 @@ jz = 1
     shape = 22,
     stroke = 1
   ) +
+    # draw the rest of the HET repeats
   geom_point(
     size = 7,
     shape = 15,
     data = ~dplyr::filter(., !name %in% c("e1", "e17", "e24"))
   ) +
+    # draw repeat labels
   geom_text(
     aes(size = ifelse(name %in% c("e1", "e17", "e24"), 5, 3.5)),
     color = "black") +
+    # theme
   scale_size_identity(guide = "none") +
-  scale_color_manual(values = hete_palette, guide = NULL, aesthetics = c("color", "fill")) +
+  scale_color_manual(values = hete_palette, guide = NULL,
+                     aesthetics = c("color", "fill")) +
   theme_void() +
   coord_fixed() )
 
