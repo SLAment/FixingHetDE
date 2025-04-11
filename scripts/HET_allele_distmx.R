@@ -14,6 +14,7 @@
 library(Biostrings)
 library(ggplot2)
 library(reshape2)
+library(dplyr)
 
 # ============================
 # Outputs
@@ -22,6 +23,10 @@ library(reshape2)
 hetd_disheatmap <- "results/het-d_disheatmap.png"
 hete_disheatmap <- "results/het-e_disheatmap.png"
 hetr_disheatmap <- "results/het-r_disheatmap.png"
+
+# To make an explanatory figure of the method
+LABhete3D <- "results/LABhete3D.pdf"
+utr_heatmap <- "results/UTH.pdf"
 
 # ============================
 #### functions ####
@@ -74,11 +79,11 @@ lab_nmds <- function(
   # (if the sequence is its own least-numbered identical sequence then
   # col 1 == col 2)
   dupes <- dupes[!duplicated(dupes[,2]),]
-
+  
   # figure out how much the rows will move after we remove the duplicates
   # (i.e. those where col 1 != col 2)
   shift <- cumsum(dupes[,1] != dupes[,2])
-
+  
   # remove the duplicates
   matches <-dupes[dupes[,1] != dupes[,2],]
   dedup_matrix <- if (nrow(matches) > 0) {
@@ -86,18 +91,18 @@ lab_nmds <- function(
   } else {
     dist_matrix
   }
-
+  
   # renumber col 1 to match entries in dedup_matrix instead of dist_matri
   dupes[,1] <- dupes[,1] - shift[dupes[,1]]
-
+  
   n <- nrow(dedup_matrix)
-
+  
   # the target is for the distance matrix in LAB space to match the
   # given matrix, up to scaling.
   # The dist object contains only the lower triangle
   target_dist <- as.dist(dedup_matrix)
   target_dist <- target_dist / mean(target_dist)
-
+  
   # initialize the LAB palette
   if (!is.null(seed)) {
     set.seed(seed)
@@ -120,7 +125,7 @@ lab_nmds <- function(
       )
     hexcodes <- colorspace::hex(palette)
   }
-
+  
   # loss function from Gecos
   # Similar but not identical to the standard NMDS loss function
   score <- function(palette) {
@@ -129,25 +134,25 @@ lab_nmds <- function(
     palette_dist <- palette_dist / palette_contrast
     return(sum((palette_dist - target_dist)^2) + contrast / palette_contrast)
   }
-
+  
   current_score <- score(palette)
   best_score <- current_score
   best_palette <- palette
-
+  
   # exponential step and temperature schedules
   step_schedule <- stepsize[1] * (stepsize[2] / stepsize[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
   beta_schedule <- beta[1] * (beta[2] / beta[1]) ^ ((seq_len(n_iter) - 1) / (n_iter - 1))
-
+  
   # optimize the palette
   for (i in seq_len(n_iter)) {
     proposal <- palette
     proposal@coords <- proposal@coords + rnorm(n * 3, 0, step_schedule[i])
-
+    
     # force all proposals into the requested ranges
     proposal@coords[,1] <- pmax(pmin(proposal@coords[,1], l_range[2]), l_range[1])
     proposal@coords[,2] <- pmax(pmin(proposal@coords[,2], a_range[2]), a_range[1])
     proposal@coords[,3] <- pmax(pmin(proposal@coords[,3], b_range[2]), b_range[1])
-
+    
     # re-sample points which are outside the RGB gamut
     proposal_hexcodes <- colorspace::hex(proposal)
     while (any(is.na(proposal_hexcodes))) {
@@ -174,7 +179,7 @@ lab_nmds <- function(
         current_score <- proposal_score
       }
     }
-
+    
     # keep track of the best scoring palette, it's possible that it isn't the
     # last one sampled
     if (current_score < best_score) {
@@ -182,13 +187,13 @@ lab_nmds <- function(
       best_score <- current_score
     }
   }
-
+  
   # add the identical sequences back in
   hexcodes <- colorspace::hex(best_palette)[dupes[,1]]
   names(hexcodes) <- rownames(dist_matrix)
   attr(hexcodes, "score") <- best_score
   attr(hexcodes, "lab") <- best_palette
-
+  
   return(hexcodes)
 }
 
@@ -208,21 +213,47 @@ meta_lab_nmds <- function(dist_matrix, seeds = sample(1:1e6, 10), ...) {
 }
 
 # --- Lore: heatmap of all repeats ---
-repeatheatmap <- function(distmatrix){
+repeatheatmap <- function(distmatrix, ang = 0, hj = 0.5){
   # Convert matrix to a data frame in long format
-  dism_long <- reshape2::melt(as.matrix(distmatrix))
-  names(dism_long) <- c("R1", "R2", "Dissimilarity")
+  dism_long <- melt(as.matrix(distmatrix))
+  
+  # Check if labels have numbers
+  contains_numbers <- any(grepl("[0-9]", dism_long$Var1)) || any(grepl("[0-9]", dism_long$Var1))
 
+  if (contains_numbers) {
+    # Case 1: Labels like 'e1', 'e2' -> strip prefix and order numerically
+    names(dism_long) <- c("R1o", "R2o", "Dissimilarity")
+    
+    dism_long <- dism_long %>%
+      mutate(
+        R1 = gsub("[^0-9]", "", R1o),
+        R2 = gsub("[^0-9]", "", R2o))
+  
+    # Make sure the factor order follows the numeric order (R1 has the same levels as R2)
+    r1_levels <- unique(dism_long$R1) 
+    
+    dism_long <- dism_long %>%
+      mutate(
+        R1 = factor(R1, levels = r1_levels),
+        R2 = factor(R2, levels = r1_levels)) %>%
+      select(-R1o, -R2o)
+  } else {
+    # Case 2: Labels like 'M', 'A', etc. 
+    names(dism_long) <- c("R1", "R2", "Dissimilarity")
+  }
+  
   # Plot heatmap
   p <- ggplot(dism_long, aes(x = R1, y = R2, fill = Dissimilarity)) +
     geom_tile() +
-    scale_fill_gradient(low = "white", high = "black") + # Define the color gradient
-    labs(x = "Columns", y = "Rows", fill = "Distance") + # Customize labels
-    theme_minimal() +
+    scale_fill_gradient(low = "white", high = "black") +
     labs(x = "", y = "", fill = "Dissimilarity") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          axis.title = element_blank(),   # Remove axis tick labels
-          legend.position = "bottom" ) # Rotate x-axis labels for better readability
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = ang, hjust = hj),
+      axis.title = element_blank(),
+      legend.position = "bottom"
+    )
+  
   return(p)
 }
 
@@ -337,7 +368,7 @@ variable_aa <- Biostrings::AAMultipleAlignment(nostop_aa)
 
 colmask(variable_aa, invert = TRUE) <-
   IRanges::IRanges(start = variable_pos, width = 1L) |>
-    IRanges::reduce()
+  IRanges::reduce()
 
 variable_aa <- methods::as(variable_aa, "AAStringSet") |>
   unique()
@@ -416,7 +447,7 @@ nostop_metadata |>
 # heatmap of all het-e repeats
 ggsave(plot = repeatheatmap(hete_variable_distmatrix),
        filename = hete_disheatmap,
-       width = 5, height = 6)
+       width = 6, height = 6)
 
 ##### color-space plot #####
 # manual 3D plot
@@ -440,7 +471,7 @@ jy = -1/sqrt(2)
 jz = 1
 
 # Plot the points
-tibble::enframe(hete_palette) |>
+(heteLAB <- tibble::enframe(hete_palette) |>
   dplyr::bind_cols(attr(hete_palette, "lab")@coords) |>
   dplyr::arrange(B) |>
   ggplot(aes(
@@ -458,15 +489,15 @@ tibble::enframe(hete_palette) |>
       rotate_x(40, -25, 0),
       rotate_x(-40, 45, 0),
       rotate_x(-40, -25, 60)
-      ),
+    ),
     yend = c(
       rotate_y(40, -25, 0),
       rotate_y(-40, 45, 0),
       rotate_y(-40, -25, 40)
-      ),
+    ),
     arrow = arrow(length = unit(0.2, "cm")),
-    linewidth = 0.1
-    ) +
+    linewidth = 0.8
+  ) +
   annotate(
     "text",
     x = c(
@@ -480,7 +511,7 @@ tibble::enframe(hete_palette) |>
       rotate_y(-40, -25, 42)
     ),
     label = c("A", "B", "L"),
-    size = 3,
+    size = 7,
     color = "black"
   ) +
   geom_segment(
@@ -488,11 +519,11 @@ tibble::enframe(hete_palette) |>
     linetype = "dashed"
   ) +
   geom_point(
-    size = 12,
+    size = 10,
     data = ~dplyr::filter(., name %in% c("e1", "e17", "e24")),
     color = "black",
     shape = 22,
-    stroke = 2
+    stroke = 1
   ) +
   geom_point(
     size = 7,
@@ -500,12 +531,17 @@ tibble::enframe(hete_palette) |>
     data = ~dplyr::filter(., !name %in% c("e1", "e17", "e24"))
   ) +
   geom_text(
-    aes(size = ifelse(name %in% c("e1", "e17", "e24"), 6, 4)),
+    aes(size = ifelse(name %in% c("e1", "e17", "e24"), 5, 3.5)),
     color = "black") +
   scale_size_identity(guide = "none") +
   scale_color_manual(values = hete_palette, guide = NULL, aesthetics = c("color", "fill")) +
   theme_void() +
-  coord_fixed()
+  coord_fixed() )
+
+# Save the 3D plot for the schematic figure
+ggsave(plot = heteLAB,
+       filename = LABhete3D,
+       width = 5, height = 5)
 
 #### het-r ####
 
@@ -555,7 +591,7 @@ sed_palette_swap <- function(old_palette, new_palette, file) {
       name = readr::parse_number(name),
       new = tolower(new)
     )
-
+  
   dplyr::inner_join(old_palette, new_palette, by = "name") |>
     glue::glue_data("s/fill:{old}/fill:{new}/") |>
     writeLines(file)
@@ -592,3 +628,10 @@ close(sed_swap_file)
 
 # To remove opacity:
 # sed -ri 's/fill-opacity:[0-9.]+;/fill-opacity:1;/g' {new_file.svg}
+
+# --- Lore: heatmap of the amino acid matrix for illustration ---
+# heatmap of all het-e repeats
+ggsave(plot = repeatheatmap(uth), 
+       filename = utr_heatmap, 
+       width = 3.8, height = 4)
+
