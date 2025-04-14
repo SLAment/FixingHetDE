@@ -13,7 +13,7 @@ Here I have three pipelines in different folders:
 - NWDgenes: contains the pipeline `NWD40explorer.smk`, which extends the pipeline above to all NWD genes with HIC WD40 repeats. Here we produced the LOGO and PCA analysis.
 
 
-Both are [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipelines that more or less depend on [conda](https://docs.conda.io/en/latest/) environments for plotting.
+They are all [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipelines that more or less depend on [conda](https://docs.conda.io/en/latest/) environments for plotting.
 
 ----
 
