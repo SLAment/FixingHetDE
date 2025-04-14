@@ -6,8 +6,9 @@ Ament-Velásquez et al. (2025) Reconstructing NOD-like receptor alleles with hig
 
 ----
 
-Here I have two versions of the same pipeline, in two folders:
+Here I have three pipelines in different folders:
 
+- HNWDphylogeny: Small pipeline (`HNWDphylogeny.smk`) to produce maximum likelihood phylogenies of different parts of an NWD protein alignment. (The actual figure in the paper was put together in Inkscape).
 - JustHetGenes: contains the pipeline `HETwd40explorer.smk`, more or less as in the [bioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.13.632504v1) version. Here we compare assemblies, alleles, and WD40 repeats of *het-d*, *het-e*, and *het-r*. Most figures in the paper come from here.
 - NWDgenes: contains the pipeline `NWD40explorer.smk`, which extends the pipeline above to all NWD genes with HIC WD40 repeats. Here we produced the LOGO and PCA analysis.
 
