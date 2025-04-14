@@ -62,7 +62,9 @@ Or
 
 Something went wrong and you want to interrupt the run? Kill it!
 
-	$ kill -s SIGINT -29795
+	$ kill -s SIGINT -$PID
+
+Where `$PID` is the process ID.
 
 ## Results
 
