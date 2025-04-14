@@ -66,10 +66,11 @@ Something went wrong and you want to interrupt the run? Kill it!
 
 ## Results
 
-The pipeline produces reports describing the WD40 repeats and an R-friendly version of the report that is read by the Rscript `scripts/PlottingHETAlleles.R`. The plots in `results` were later modified in Inkscape manually for the paper's figures.
+The main results from this pipeline are similar to those in `HETwd40explorer.smk`, but in addition it produces two main figures:
 
-- `alignments/WDrepeats_10-11-12-14-30-32-39.fa` -- alignment that contains *all* full repeats, from all assemblies and all alleles (repeats with frame-shifts or N tracks are not included). Repeats that contain stop codons are not classified, and instead have fasta headers starting with `!`. If the header says "allkmers" or "default" then the sequence came from an Illumina assembly.
-
+- `PCA_hetdclade.png` -- PCA of the WD40 repeats of *het-d* and *hnwd1*
+- `WD40_LOGOS.png` -- Logos of the WD40 HIC repeats of all the NWD genes
+- `PCA_paper.pdf` -- PCA of the WD40 repeats of all NWD genes and *het-e*, *hnwd3*, *nwd6* and *nwdp-2*.
 
 ----
 
