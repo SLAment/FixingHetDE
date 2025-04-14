@@ -5,11 +5,12 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++
 
 # Input files
-basealignment: "data/2024.09.10_hnwd_master_het_reAl_Illu_noGuides_noemptycols.fa"
+basealignment: "data/2025.04.14_hnwd_master_onlyWDdomain_NWDs_noGuides_noemptycols_4paper.fa" # for all NWD genes (including HNWDs) in P. anserina (excluding NWD4, which is not closely related)
 
 # Scripts
-descriptor: "scripts/WDdescriptor.py"
-PlottingHETAlleles: "scripts/PlottingHETAlleles.R"
+descriptor: "../JustHetGenes/scripts/WDdescriptor.py"
+WD40s_PCA: "scripts/WD40s_PCA_paralog.R"
+WD40s_LOGOS: "scripts/WD40s_LOGOS.R"
 
 ## Variables
 # The amino acid positions used to classify the repeats (influenced by the REGEX definition of the repeat)

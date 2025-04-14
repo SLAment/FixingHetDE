@@ -1,0 +1,17 @@
+### ANKexplorer: Exploring the diversity of ANK repeats in the Podospora anserina species complex
+# ===========================================================================
+# Sandra Lorena Ament Velasquez
+# 2024-08-13
+# ++++++++++++++++++++++++++++++++++++++++++++++
+
+# Input files
+basealignment: "data/2024.09.10_hnwd_master_het_reAl_Illu_noGuides_noemptycols.fa" # Just for het-e, het-d, and het-r
+
+# Scripts
+descriptor: "scripts/WDdescriptor.py"
+PlottingHETAlleles: "scripts/PlottingHETAlleles.R"
+
+## Variables
+# The amino acid positions used to classify the repeats (influenced by the REGEX definition of the repeat)
+AMINOS: '10-11-12-14-30-32-39' # coordinates of WD40 Repeat as in Hu et al. (2017) 10.1038/s41598-017-11115-1
+

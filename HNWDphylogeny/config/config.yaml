@@ -1,0 +1,9 @@
+### ANKexplorer: Exploring the diversity of ANK repeats in the Podospora anserina species complex
+# ===========================================================================
+# Sandra Lorena Ament Velasquez
+# 2024-08-13
+# ++++++++++++++++++++++++++++++++++++++++++++++
+
+# Input files
+MASTERalignment: "data/hnwd_clade_reps_aa2.fa"
+LOCI: ["HET", "NACHT1", "NACHT2", "NACHT3"]

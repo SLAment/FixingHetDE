@@ -1,0 +1,25 @@
+Total number of processed repeats: 1248
+Total number of clean repeats: 1107
+Total number of clean filtered repeats: 1107
+Repeat number of het-d: 129
+Repeat number of het-d after filtering: 129
+Repeat number of hnwd1: 143
+Repeat number of hnwd1 after filtering: 143
+Repeat number of het-e: 166
+Repeat number of het-e after filtering: 166
+Repeat number of het-r: 97
+Repeat number of het-r after filtering: 97
+Repeat number of hnwd3: 105
+Repeat number of hnwd3 after filtering: 105
+Repeat number of nwd1: 118
+Repeat number of nwd1 after filtering: 118
+Repeat number of nwd2: 31
+Repeat number of nwd2 after filtering: 31
+Repeat number of nwd3: 63
+Repeat number of nwd3 after filtering: 63
+Repeat number of nwd5: 108
+Repeat number of nwd5 after filtering: 108
+Repeat number of nwd6: 83
+Repeat number of nwd6 after filtering: 83
+Repeat number of nwdp-2: 64
+Repeat number of nwdp-2 after filtering: 64

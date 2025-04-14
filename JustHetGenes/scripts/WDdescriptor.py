@@ -262,7 +262,7 @@ def assignspp(strainID):
 outputfasta = open( f"{args.output}.fa", "w")
 outputmetadata = open(f"{args.output}_metadata.txt", "w")
 
-outputmetadata.write("Sequence\tRepeatType\tStrain\tSpecies\tGene\tAllele\tSeqID\tPosition\tEnd\n") # Print a header for the metadata
+outputmetadata.write("Sequence\tRepeatType\tStrain\tSpecies\tGene\tAllele\tSeqID\tPosition\n") # Print a header for the metadata
 
 # REGEX to find WD40 repeats
 # StrictWDmotif = re.compile(r"(L|F|I)(E|K|A|Q)([\w]{36})(C|Y|G|R|K|E|H|S)(T|I|F|L|M|V|Q|R|W)(Q|R|H|K|L|E)(T|A|M|K)") # Original, based on Paoletti et al. (2007) 10.1371/journal.pone.0000283

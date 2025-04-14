@@ -1,4 +1,4 @@
-Sequence	RepeatType	Strain	Species	Gene	Allele	SeqID	Position	End
+Sequence	RepeatType	Strain	Species	Gene	Allele	SeqID	Position
 d1_het-D1__ChEhDap.R10_1	d1	ChEhDap	anserina	het-d	het-D1	1	1
 d2_het-D1__ChEhDap.R10_2	d2	ChEhDap	anserina	het-d	het-D1	2	2
 d3_het-D1__ChEhDap.R10_3	d3	ChEhDap	anserina	het-d	het-D1	3	3
