@@ -1,4 +1,4 @@
-# Characterizing the alleles of het-d and het-e
+# Characterizing the alleles of *het-d* and *het-e*
 
 Here you'll find the code associated with the paper:
 
