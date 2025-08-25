@@ -2,7 +2,7 @@
 
 Here you'll find the code associated with the paper:
 
-Ament-Velásquez et al. (2025) Reconstructing NOD-like receptor alleles with high internal conservation in *Podospora anserina* using long-read sequencing (in prep.)
+Ament-Velásquez et al. (2025) Reconstructing NOD-like receptor alleles with high internal conservation in *Podospora anserina* using long-read sequencing, [Microbial Genomics 11:001442](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.001442).
 
 ----
 
